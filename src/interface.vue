@@ -2,10 +2,10 @@
 	<div 
 		class="grid-area"
 		:class="(gridTemplate) ? 'template' : ''"
-		:style="`--grid-template: ${gridTemplate};--grid-columns: ${columnCount}`"
+		:style="`--grid-template:${gridTemplate}; --grid-columns: ${columnCount};`"
 		>
 
-		<component v-if="gridTemplate" is="style">
+		<component v-if="gridTemplate" :is="style">
 			{{ generateGridTemplate() }}
 		</component>
 
@@ -26,9 +26,8 @@
 
 <script lang="ts">
 import { Field } from '@directus/shared/types';
-import { defineComponent, PropType, ref, computed, inject } from 'vue';
+import { defineComponent, PropType, ref } from 'vue';
 import { ValidationError } from '@directus/shared/types';
-import { render } from 'micromustache';
 import { useI18n } from 'vue-i18n';
 export default defineComponent({
 	name: 'InterfaceGroupDetail',
@@ -82,18 +81,23 @@ export default defineComponent({
 	},
 	emits: ['apply'],
 	setup(props) {
+
+		console.log(props);
+
 		const { t } = useI18n();
 		const internalActive = ref<boolean>(false);
-		const values = inject('values', ref<Record<string, any>>({}));
 		const generateGridTemplate = function() {
-			let areas = props.gridTemplate?.replace(/"/gm, ' ').split(' ').filter((v, i, a) => {
+
+			let areas = props.gridTemplate?.replace("\n", ' ').replace(/"/gm, ' ').split(' ').filter((v, i, a) => {
 				if(v === '' || v === ' ' || v == "\n") return false
 				return a.indexOf(v) === i
 			});
 
-			console.log(areas)
+			if (!areas) return ''
 
-			let styles = ''
+			let styles = `.grid-area.template{
+				--grid-template:${props.gridTemplate};
+			}`
 
 			areas?.forEach((area, key) => {
 				styles += `.grid-area .v-form .field:nth-child(${key + 1}) {
@@ -121,7 +125,7 @@ export default defineComponent({
 .v-form.with-fill {
 	grid-template-columns: [start] minmax(0,1fr) [half] minmax(0,1fr) [full] !important;
 }
-.grid-area .v-form {
+.grid-area:not(.template) .v-form {
 	display: grid;
 	grid-template-columns: repeat(var(--grid-columns), 1fr) !important;
 }
@@ -130,6 +134,4 @@ export default defineComponent({
 	display: grid;
 	grid-template-areas: var(--grid-template);
 }
-
-
 </style>
